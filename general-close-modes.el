@@ -1,4 +1,4 @@
-;;; general-close-modes.el --- mode-specific functions
+;;; general-close-modes.el --- mode-specific functions    -*- lexical-binding: t -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
@@ -40,8 +40,8 @@
 (defun general-close--ruby-fetch-delimiter-maybe ()
   (save-excursion
     (and (< 0 (abs (skip-syntax-backward "\\sw")))
-	 (eq 1 (car (syntax-after (1- (point)))))
-	 (char-before))))
+         (eq 1 (car (syntax-after (1- (point)))))
+         (char-before))))
 
 (defun general-close--ruby-insert-end ()
   (unless (or (looking-back ";[ \t]*"))
@@ -50,16 +50,16 @@
     (unless (looking-back "^[^ \t]*\\_<end")
       (insert "end")
       (save-excursion
-	(back-to-indentation)
-	(indent-according-to-mode)))))
+        (back-to-indentation)
+        (indent-according-to-mode)))))
 
 (defun general-close-ruby-close (&optional arg)
   "Equivalent to py-dedent"
   (interactive "*")
   (let ((orig (point))
-	(erg (general-close--ruby-fetch-delimiter-maybe)))
+        (erg (general-close--ruby-fetch-delimiter-maybe)))
     (if erg
-	(insert (char-to-string erg))
+        (insert (char-to-string erg))
       (general-close--ruby-insert-end))))
 
 ;; Php
@@ -67,23 +67,19 @@
   (let ((pps pps))
     (unless (and (not (eq closer ?})) (nth 1 pps))
       (save-excursion
-	(forward-char -1)
-	(setq pps (parse-partial-sexp (line-beginning-position) (point)))
-	(when (nth 1 pps)
-	  (save-excursion
-	    (goto-char (nth 1 pps))
-	    ;; just a single list
-	    (setq done (member (char-before) (list ?\t ?\n ?\ ?=)))
-	    (or done
-		(beginning-of-line)
-		(and (or (looking-at "function")(looking-at "public function"))
-		     (setq done t)))))))))
+        (forward-char -1)
+        (setq pps (parse-partial-sexp (line-beginning-position) (point)))
+        (when (nth 1 pps)
+          (save-excursion
+            (goto-char (nth 1 pps))
+            ;; just a single list
+            (or (member (char-before) (list ?\t ?\n ?\ ?=))
+                (beginning-of-line)
+                (or (looking-at "function")(looking-at "public function")))))))))
 
-(defun general-close-insert-closing-char (pps)
-  (when (eq major-mode 'php-mode)
-    (general-close--php-check pps))
-  (unless done
-    (insert general-close-command-separator-char)))
+(defun general-close-php-close (pps closing-char)
+  (or (general-close--php-check pps)
+      (insert closing-char)))
 
 (provide 'general-close-modes)
 ;;; general-close-modes.el ends here
